@@ -23,7 +23,7 @@ header-includes:
   \pretitle{
     \begin{center}
     \vspace{-2cm} 
-    \includegraphics[width=5cm]{CENTER LOGO.png}
+    \includegraphics[width=5cm]{logos_css/CENTER LOGO.png}
     \hfill
     \text{}
     \\[\bigskipamount]
@@ -50,7 +50,7 @@ always_allow_html: yes
      <!-- $head.prepend('<img src=\"logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
      <!-- $head.prepend('<img src=\"../codi/logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
      <!-- $head.prepend('<img src=\"https://www.santpau.cat/o/HOSSPAU-Public-theme/images/CampusAssistencial-Convicencia-Positiu-Logo.svg\" style=\"float: left:1;width: 285px;\"/>') -->
-     $head.prepend('<img src=\"../codi/CENTER LOGO.png\" style=\"float: left:1;width: 185px;\"/>')
+     $head.prepend('<img src=\"../codi/logos_css/CENTER LOGO.png\" style=\"float: left:1;width: 185px;\"/>')
    });
 </script>
 
@@ -316,7 +316,7 @@ L'equacio seria $e=mc^2$
 
 T1_compare<-compareGroups::descrTable(dades,method = 2,Q1=0,Q3=1,extra.labels = c("","","")) 
 
-T1_compare %>% export2md(, format = "markdown")
+T1_compare %>% export2md(format = "markdown")
 
 ```
 
@@ -423,7 +423,7 @@ nom_arxiu_Rmd <- knitr::current_input()
 # 
 # generar_informe_word(path_arxiu=here::here("codi","2_Analisi.Rmd") ,path_informe=here::here("outputs","informe_mierda2.docx"))
 
-generar_informe_word(path_arxiu="2_Analisi.Rmd" ,path_informe=here::here("outputs","informe_ray.docx"))
+generar_informe_word(path_arxiu="2_Analisi.2.Rmd" ,path_informe=here::here("outputs","informe_ray.docx"))
 
 
 
