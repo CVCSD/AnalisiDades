@@ -17,10 +17,8 @@ rmarkdown::render("codi/2_Analisi.2.Rmd",
 
 
 
-
 rmarkdown::render("codi/2_Analisi.2.Rmd", 
                   output_file =  paste0("Informe_estadistic_analisi",Sys.Date()),   output_format = "pdf_document")
 
 source("codi/render_pdf.R")
 
-?rmarkdown::render

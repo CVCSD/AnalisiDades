@@ -1,0 +1,935 @@
+---
+title: "Descripció de Variables i articles a abordar del projecte mHeart"
+subtitle: "Informe estadístic"
+author: "Jordi Real"
+website: "https://github.com/jrealgatius/"
+
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+    css: logos_css/usr_styles.css
+    
+params:
+  mostra: yes
+
+# bibliography: "references.bib"
+
+---
+
+&nbsp;
+<script>
+   $(document).ready(function() {
+     $head = $('#header');
+     <!-- $head.prepend('<img src=\"https://www.idiapjgol.org/images/logo.png\" style=\"float: right ;width: 130px;\"/>') -->
+     <!-- $head.prepend('<img src=\"https://avatars2.githubusercontent.com/u/57066591?s=200&v=4\" style=\"margin-left:25% ;width: 80px;\"/>') -->
+     <!-- $head.prepend('<img src=\"codi/logos_css/logo_sant_pau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     <!-- $head.prepend('<img src=\"codi/logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     <!-- $head.prepend('<img src=\"../codi/logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     $head.prepend('<img src=\"https://www.santpau.cat/o/HOSSPAU-Public-theme/images/CampusAssistencial-Convicencia-Positiu-Logo.svg\" style=\"float: left:1;width: 285px;\"/>')
+
+
+   });
+</script>
+
+
+<div class="watermark">DRAFT</div>
+
+****
+
+
+# Objectivos
+
+
+## Objetivo principal
+
+Evaluar l'impacte de la intervenció MHeart ha tingut un sobre les següents variables: QoL, ansietat depressió, insomni, dolor, satisfacció
+
+## Objetivo secundario
+
+
+
+# Estatus
+
+## Fet
+
+- Lectura de fitxers
+- Formatar dates, numbers
+- Recodificacions i càlculs
+- Vinculació d'arxius (Baselines + Historic visites)
+- Reestructuració d'arxius
+- Generador de conductor (Etiquetes)
+- Generador de cataleg
+- Identificar variables Baseline i Seguiment
+- Descriptiva exploratoria I i II
+- Test anàlisi d'outcomes
+
+## Pendent
+
+- Depuració de dades
+- Definir agrupadors de fàrmacs i diagnòstics
+- Reestructuració de taules
+- Definir estrategia d'anàlisi principal
+
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE, include=T,size="huge")
+
+# Notació no cientifica dels numeros
+# options(scipen = 999)
+
+
+#######################################################
+#
+#
+# libreries i funcions necessaries
+library("dplyr")
+library("lubridate")
+library("compareGroups")
+# library("gtsummary")
+# library("sjPlot")
+# library("tableone")
+# library("magrittr")
+# library("ggplot2")
+# library("scales")
+
+# library(REDCapDM)
+# library(REDCapR)
+
+#
+#
+# # Descarregar funcions github -
+# link_source<-paste0("https://github.com/jrealgatius/Stat_codis/blob/master/funcions_propies.R","?raw=T")
+# devtools::source_url(link_source)
+
+
+path_conductor<-here::here("conductor_variables.xls")
+
+
+```
+
+
+```{r lecturadades, eval=TRUE}
+# estructura de carpetes: /dades /codi /outputs /docs
+
+# list.files("../dades/")
+# 
+
+# "2. Identificativas_basal.xlsx"  
+dades_basals<-
+  readxl::read_excel(here::here("dades","2. Identificativas_basal.xlsx")) 
+
+# descrTable(dades_basals)
+
+dades_basals_esp<-
+  readxl::read_excel(here::here("dades","2. Identificativas_basal.xlsx"),sheet = "ESPCIALIDADES") 
+  
+
+
+# Descripción de las poblaciones"
+dades_des_pob<-
+  readxl::read_excel(here::here("dades","Descripción de las poblaciones.xlsx")) %>% mutate(NHC=as.numeric(NHC))
+
+# Netejar noms de variables
+dades_des_pob<-FormatGe::netejar.accents.variables(dades_des_pob)
+dades_des_pob<-FormatGe::netejar.noms.variables(dades_des_pob)
+
+#
+#
+
+
+# names(dades) %>% write.csv2("vars.csv")
+# path_conductor<-here::here("conductor.xls")
+
+```
+
+```{r lectura_dades_QV}
+# Dades no etiquetades 
+# dades_QV<-read.csv2(here::here("dades","Dades_5uQT5poRGY-mHeart_Vis-DAT.csv"),encoding = "latin1")
+
+# dades etiquetades
+dades_QV_historic<-read.csv2(here::here("dades","Descripcio_5uQT5poRGY-mHeart_Vis-DAT.csv"), encoding = "latin1")
+
+
+```
+
+```{r generar_catalegs_codis, eval=FALSE}
+
+# Cataleg_ codis CIM10 long 
+dt_cataleg_dg<-dades %>% select(starts_with("COMORB_PRE"),starts_with("COMORB_POST"))
+cols_comorbi<-names(dt_cataleg_dg)
+
+dt_cataleg_dg %>% tidyr::pivot_longer(cols_comorbi) %>% na.omit() %>% distinct(value) %>% 
+  write.csv2("CIM10.csv")
+
+
+# Cataleg codis ATC
+dt_cataleg_ATC<-dades_QV_historic %>% select(starts_with("ATC"))
+cols_comorbi<-names(dt_cataleg_ATC)
+
+dt_cataleg_ATC %>% tidyr::pivot_longer(cols_comorbi) %>% na.omit() %>% distinct(value) %>% 
+  write.csv2("ATC.csv")
+
+
+  
+
+```
+
+
+```{r arreglar_noms}
+
+# names(dades_QV_historic) %>% write.csv2("vars_QV.csv")
+# Arreglar noms de variables
+dades_QV_historic<-FormatGe::netejar.accents.variables(dades_QV_historic)
+dades_QV_historic<-FormatGe::netejar.noms.variables(dades_QV_historic)
+# names(dades_QV_historic) %>% write.csv2("vars_QV.csv")
+
+
+# Captura de noms nous
+dt_conductor_historic<-readxl::read_excel(path_conductor,sheet = "VarQV")
+
+vars_names_nous<-dt_conductor_historic %>% filter(!is.na(camp_origen)) %>% pull(camp)
+vars_names_origen<-dt_conductor_historic %>% filter(!is.na(camp_origen)) %>% pull(camp_origen)
+
+# Canvi de noms
+dades_QV_historic <- dades_QV_historic %>%
+  rename(!!setNames(vars_names_origen, vars_names_nous))
+
+
+rm(vars_names_nous,vars_names_origen)
+
+```
+
+
+```{r}
+
+
+# "Exitus.xlsx"
+dades_exitus<-readxl::read_excel(here::here("dades","Exitus depurat.xlsx"))
+
+# "Evolutivas"
+dades_evolutivas<-readxl::read_excel(here::here("dades","4. Evolutivas.xlsx"))
+
+#
+
+# list.files("../dades/")
+
+```
+
+```{r fusio, warning=TRUE, message=TRUE}
+# Unificació de dades 
+
+dades<-
+  dades_des_pob %>% 
+  left_join(dades_basals,by="NHC") %>% 
+  left_join(dades_evolutivas, by=c("NHC","id_participante")) 
+
+
+
+# Filtrar dades de seguiment 
+dades_QV_historic<-dades %>% select(id_participante) %>% left_join(dades_QV_historic,by = join_by(id_participante))
+
+
+# names(dades_des_pob)
+
+
+# descrTable(dades_des_pob)
+# descrTable(dades_basals)
+# descrTable(dades_evolutivas)
+# descrTable(dades_visita)
+# descrTable(dades_visita0)
+# descrTable(dades_visita1)
+
+# names(dades_evolutivas)
+
+
+
+```
+
+
+
+```{r canvis_noms_baselines}
+
+
+
+## Canvi de noms de variables en baseline
+old_names<-c("f√†rmac_aturat_motiu_efecte_sec","cav_revascularitzaci√≥")
+new_names<-c("farmac_aturat_motiu_efecte_sec","cav_revascularitzacio")
+
+#
+dades <- dades %>% rename(!!!setNames(old_names, new_names))
+
+#
+rm(old_names,new_names)
+
+```
+
+```{r recodes_varis}
+
+# Formatar dates
+vars_dates<-readxl::read_excel(path_conductor) %>% filter(dates>0) %>% pull(camp)
+dades<-dades %>% mutate_at(vars_dates,~FormatGe::data_convert_UTC(.))
+
+vars_dates<-readxl::read_excel(path_conductor) %>% filter(dat_txt>0) %>% pull(camp)
+dades<-dades %>% mutate_at(vars_dates,~FormatGe::data_convert_text(.))
+
+
+# Calcular Edat
+dades<-dades %>% mutate(edat=as.numeric(Fecha_ingreso_en_estudio-F_Nac)/365.25)
+
+# Factoritzar
+vars_factor<-readxl::read_excel(path_conductor) %>% filter(factor>0) %>% pull(camp)
+dades<-dades %>% mutate_at(vars_factor,as.factor) 
+
+
+```
+
+
+```{r recodes_dthistoric}
+
+# Recodes
+#Dates 
+vars_dates<-readxl::read_excel(path_conductor,sheet = "VarQV") %>% filter(dates>0) %>% pull(camp)
+dades_QV_historic<-dades_QV_historic %>% mutate_at(vars_dates,~lubridate::dmy(.))
+
+# Numbers
+vars_nums<-readxl::read_excel(path_conductor,sheet = "VarQV") %>% filter(nums>0) %>% pull(camp)
+dades_QV_historic<-dades_QV_historic %>% mutate_at(vars_nums,~as.numeric(.))
+
+
+# Num visita
+dades_QV_historic<-dades_QV_historic %>% 
+  group_by(id_participante) %>% 
+    mutate(visita_num=1:n()) %>% 
+  ungroup() %>% relocate(id_participante,visita_num,FECVISITA)
+
+
+
+
+```
+
+
+```{r arreglar_historic_diagnostics}
+# 
+# Fer long 
+dt_comorb_pre<-dades %>% select(id_participante,starts_with("COMORB_PRE"))
+cols_comorbi<-names(dt_comorb_pre)[2:length(names(dt_comorb_pre))]
+
+dt_comorb_pre<-
+  dt_comorb_pre %>% tidyr::pivot_longer(cols_comorbi) %>% na.omit() %>% select(id_participante,cod=value)
+  
+# Fer long 
+dt_comorb_post<-dades %>% select(id_participante,starts_with("COMORB_POST"))
+cols_comorbi<-names(dt_comorb_post)[2:length(names(dt_comorb_post))]
+
+dt_comorb_post<-
+  dt_comorb_post %>% tidyr::pivot_longer(cols_comorbi) %>% na.omit() %>% select(id_participante,cod=value)
+
+```
+
+
+```{r arreglar_historic_farmacs, include=FALSE}
+# 
+# Fer long 
+dt_atc<-dades_QV_historic %>% select(id_participante,dat=visita_num,starts_with("ATC"))
+cols_vars<-names(dt_atc)[3:length(names(dt_atc))]
+
+dt_atc<-
+  dt_atc %>% tidyr::pivot_longer(cols_vars) %>% na.omit() %>% select(id_participante,dat,cod=value) %>% 
+  filter(cod!="")
+
+# Allargar els codis ATC 
+dt_atc
+dt_temp1<-dt_atc %>% mutate(cod=substr(cod,1,1)) %>% distinct()
+dt_temp2<-dt_atc %>% mutate(cod=substr(cod,1,3)) %>% distinct()
+dt_temp3<-dt_atc %>% mutate(cod=substr(cod,1,4)) %>% distinct()
+dt_temp4<-dt_atc %>% mutate(cod=substr(cod,1,5)) %>% distinct()
+#
+dt_atc<-
+  dt_atc %>% bind_rows(dt_temp1) %>% bind_rows(dt_temp2) %>% bind_rows(dt_temp3) %>% bind_rows(dt_temp4) %>%
+  arrange(id_participante,dat,cod) 
+
+#
+# dades_QV_historic %>% select(id_participante,dat=visita_num,FC_OTC_AGRUPADA
+# ,starts_with("ATC")) 
+
+```
+
+```{r funcio_generar_dummies}
+
+generar_dumies<-function(var="p2",dt=dades){
+  # var="FC_IS_AGRUPADAS"
+  # dt=dt_temp
+  var_sym<-dplyr::sym(var)
+  # 1. Selecciono id + pregunta i elimino punts [.]
+  dt_temp<-dt %>% select(id_participante,visita_num,!!var_sym) %>% 
+    mutate(!!var_sym:=stringr::str_remove_all(!!var_sym,"[.]"),
+           !!var_sym:=stringr::str_remove_all(!!var_sym,"\\(genérico"))
+  
+  # 2. Separo pregunta per opcions de resposta separades per comes
+  dt_temp<-splitstackshape::cSplit_e(dt_temp, var, ",", type = "character", fill = 0) %>% 
+    select(-!!var_sym)
+  # 3 Retorno data frame 
+  dt_temp
+  
+  }
+
+generar_dumies_buit <- function(variable, dataframe) {
+  if (!exists(variable)) {
+    dataframe %>% select(c("id_participante","visita_num")) %>% mutate(!!variable := 0)
+  } else {dataframe %>% select(c("id_participante","visita_num")) } }
+
+
+
+
+```
+
+
+```{r dicotomitzarvars_historic}
+# vars_dic<-c("FC_IS_AGRUPADAS", "otra_medicacion_AGRUPADA","FC_OTC_AGRUPADA","TP_AGRUPADA",
+# "FIT_AGRUPADA","motivos_de_uso","sustancias_insomnio","ttos_para_dormir","insomnio_x_enfermedad_medica")
+
+dt_temp<-dades_QV_historic
+
+# Open conductor dictotomiques
+dtcat_vars_dic<-readxl::read_excel(path_conductor,sheet = "vars_dicotomic") %>% na.omit()
+
+vars_dic <- dtcat_vars_dic %>% distinct(var) %>% pull(var)
+vars_noves <- dtcat_vars_dic %>% pull(camp)
+#
+
+## Generar tot el llistat de dummies
+dt_temp2<-
+  vars_dic %>% 
+  purrr::map(~generar_dumies(.x,dt_temp)) %>% 
+  purrr::reduce(left_join, by=c("id_participante","visita_num")) 
+
+## Generar variables dumies faltants 
+dt_temp3<-
+  vars_noves[!vars_noves %in% names(dt_temp2)] %>%
+  purrr::map(~ generar_dumies_buit(.x, dt_temp2)) %>%
+  purrr::reduce(full_join,by=c("id_participante","visita_num"))
+
+## Fusionar 
+dt_temp2<-dt_temp2 %>% left_join(dt_temp3,by=c("id_participante","visita_num"))
+
+# Comprovar reordenar 
+dt_temp2<-dt_temp2 %>% select(c("id_participante","visita_num"),vars_noves)
+
+# Fusionar en historic
+dades_QV_historic<-dades_QV_historic %>% left_join(dt_temp2,by=c("id_participante","visita_num"))
+
+
+
+# dtcat_vars_dic %>% select(camp,descripcio) %>% write.csv2("vars.csv")
+
+```
+
+```{r, eval=FALSE}
+
+dt_temp<-dades_QV_historic %>% select(starts_with("FC_IS")) 
+
+descrTable(dt_temp,method = 3)
+
+```
+
+
+
+```{r cataleg_ATC, eval=FALSE}
+# Obrir cataleg de codis ATC 
+dt_cataleg_ATC<-readxl::read_excel(path_conductor, sheet = "cataleg") %>% filter(domini=="farmac")
+dt_temp1<-dt_cataleg_dg %>% mutate(cod=substr(cod,1,1)) %>% distinct(domini,cod)
+dt_temp2<-dt_cataleg_dg %>% mutate(cod=substr(cod,1,3)) %>% distinct(domini,cod)
+dt_temp3<-dt_cataleg_dg %>% mutate(cod=substr(cod,1,4)) %>% distinct(domini,cod)
+dt_temp4<-dt_cataleg_dg %>% mutate(cod=substr(cod,1,5)) %>% distinct(domini,cod)
+
+#
+dt_cataleg_ATC<-dt_cataleg_ATC %>% bind_rows(dt_temp1) %>% bind_rows(dt_temp2) %>% bind_rows(dt_temp3) %>% bind_rows(dt_temp4) %>% arrange(cod) 
+                        
+# He de generar les variables afegint els nivells 1,2,3,4
+
+# Obrir Bdades ATC descriptors 
+dt_ATC_desc<-readxl::read_excel(here::here("dades","ATC_descripcio_2013.xls")) %>% rename(cod=Código, descripcio=ATC) %>% distinct()
+
+dt_cataleg_ATC %>% left_join(dt_ATC_desc,by="cod") %>% write.csv2("farmacs.csv", na="")
+```
+
+```{r cataleg_CIM10, eval=FALSE}
+#
+dt_cataleg_CIM10<-readxl::read_excel(path_conductor, sheet = "cataleg") %>% filter(domini=="diagnostic")
+
+#
+# Obrir Bdades CIE10 descriptors
+# dt_CIM10<-read.csv2(here::here("dades","icd10cm_order_2022.txt"), header=F,sep = "")
+
+dt_IC10_desc<-readxl::read_excel(here::here("dades","ICD10_2022.xlsx")) %>% select(cod,descripcio=descripcion1,tipo)
+
+#
+dt_cataleg_CIM10 %>% distinct(domini,cod) %>% 
+  mutate(cod_bo=stringr::str_replace_all(cod, "\\.", "")) %>% 
+  left_join(dt_IC10_desc,by=c("cod_bo"="cod")) %>% 
+  write.csv2("vars.csv", na="")
+
+#
+
+
+```
+
+
+```{r recodes}
+
+path_conductor<-here::here("conductor_variables.xls")
+dades<-dades %>% FormatGe::etiquetar_valors(path_conductor,fulla = "labels")
+
+#
+dades_QV_historic<-dades_QV_historic %>% FormatGe::etiquetar_valors(path_conductor,fulla = "labels_historic")
+#
+
+```
+
+```{r captura_dades_basals}
+
+# Captura de dades basals de l'historic visita==1 
+
+vars_basals<-readxl::read_excel(path_conductor, sheet = "VarQV") %>% filter(basals>0) %>% pull(camp)
+
+
+dt_temp<-dades_QV_historic %>% filter(visita_num==1) %>% select(id_participante, vars_basals)
+
+# names(dt_temp) %>% write.csv2("vars.csv")
+
+dades<-dades %>% left_join(dt_temp,by="id_participante")
+
+# 
+dades<-dades %>% mutate(grup=POBLACION_DE_ESTUDIO,idp=id_participante) %>% relocate(c("id_participante","idp","grup"))
+
+# Capturar grup
+dades_QV_historic<-dades_QV_historic %>% left_join(select(dades,c(id_participante,idp,grup)),by="id_participante")
+
+
+```
+
+
+# Anàlisi exploratori I
+
+## Descriptiva baseline
+
+```{r descriptiva_basal_grups}
+
+# descrTable(dades)
+
+formu<-FormatGe::formula_text("baseline","POBLACION_DE_ESTUDIO",taulavariables = path_conductor)
+
+descrTable(formu,data=dades, show.p.overall = F,show.all = T) %>% export2md()
+
+
+```
+
+
+## Descriptiva outcomes QV durant seguiment
+
+- Identificar variables: QoL, ansietat depressió, insomni, dolor, satisfacció
+- Visites de seguiment i informació Basal
+
+
+```{r}
+# filtre dels 134 participants
+dt_temp<-dades_QV_historic
+
+# 
+var_qv<-readxl::read_excel(path_conductor,sheet = "VarQV") %>% filter(!is.na(outcomes_QV)) %>% pull(camp)
+
+# dt_temp %>% distinct(id_participante,FECVISITA,TIPOVISITA,TIPOVISITA) %>% left_join(select(dades,id_participante,Data_V1,Data_V2,Data_V3))
+
+# dt_temp %>% select(id_participante,FECVISITA,TIPOVISITA,visita_num,var_qv) %>% arrange(id_participante,FECVISITA)
+
+
+# Descriptive outcomes pèr visita
+formu<- FormatGe::formula_text("outcomes_QV",y="TIPOVISITA", taulavariables=dt_conductor_historic)
+
+descrTable(formu,data=dt_temp, method = 2,Q1=0,Q3=1,extra.labels = c("","",""), show.p.overall = F, show.all = F) %>% 
+  export2md(caption = "Summary descriptives table of outcomes")
+
+
+
+
+
+
+```
+
+
+
+## Descriptiva outcomes identificats com a numériques durant seguiment
+
+
+```{r}
+
+dt_temp<-dades_QV_historic
+# 
+var_qv<-readxl::read_excel(path_conductor,sheet = "VarQV") %>% filter(!is.na(outcomes_QV)) %>% pull(camp)
+
+# Selecciono només numeriques
+var_qv<-dt_temp %>% select(var_qv) %>% select_if(is.numeric) %>% names()
+
+# formu<- FormatGe::formula_vector(var_qv,y="TIPOVISITA")
+# descrTable(formu,data=dt_temp, method = 2,Q1=0,Q3=1,extra.labels = c("","",""), show.p.overall = F, show.all = F) %>% 
+#   export2md(caption = "Summary descriptives table of outcomes")
+
+
+formula<-paste0("~",var_qv %>% paste0(collapse = "+"),"| TIPOVISITA")
+table1::table1(formula %>% as.formula() , data = dt_temp,transpose=F,overall=F,caption="Summary descriptives table of outcomes")
+
+
+formula<-paste0("~",var_qv %>% paste0(collapse = "+"),"| TIPOVISITA * grup")
+table1::table1(formula %>% as.formula() , data = dt_temp,transpose=F,overall=F,caption="Summary descriptives table of outcomes")
+
+
+
+
+
+```
+
+
+
+## Evolució d'outcomes durant seguiment per grups
+
+- Exemple d'un outcomes de CV númerics
+
+
+
+
+```{r funciooutcut,results="asis"}
+
+
+generar_output<-function(x="puntuacion_total_Goldberg",dt=dt_temp) {
+
+  # x="puntuacion_total_Goldberg"
+  # dt=dt_temp
+  
+  formula_model<-function(x) (paste0(x,"~ grup*visita_num  +  +(1|visita_num)"))
+
+  # Afegir baseline (valor_baseline)
+  model<-lme4::lmer(formula_model(x) , data=dt)
+
+   # Plot prediccions
+  x<-rlang::sym(x)
+  dadestemp<-dt %>% select(!!x,grup,visita_num) %>% na.omit()
+  dadestemp$fit <- predict(model)    #Add model fits to dataframe
+  
+   # Descriptiva de dades completes / imputades
+  # Descriptiva de dades imputades
+  formula<-paste0("~",x %>% paste0(collapse = "+"),"| TIPOVISITA * grup")
+  descriptiva_comp<-table1::table1(formula %>% as.formula() , data = dt,transpose=F,overall=F)
+
+   # Print resultats
+  cat('\n >')
+    cat("\n## OUTCOME: ",x,"\n")
+  cat("\n### Descriptiva de dades completes \n")
+  
+  # descriptiva_comp%>% cat()
+  
+  descriptiva_comp %>% cat()
+  
+  cat('\n >')
+  
+  
+  cat("\n### Model 1\n") 
+  cat(sjPlot::tab_model(model)$knitr,"\n------\n")  # Model 
+  
+  library(ggplot2)
+  
+  fig<-ggplot(dadestemp,aes(x=visita_num, y=fit, col=grup)) +
+    geom_line (aes(y=fit,lty=grup))+ggtitle(paste0("Prediccions segons model de: ",x))
+  cat('\n')
+  cat('\n### Prediccions segons model 1')
+  cat('\n')
+  print(fig)    # Figur
+  
+  cat('\n')
+  
+  
+  }
+
+
+
+```
+
+```{r genera_output, results="asis"}
+
+# dt_temp<-dades_QV_historic
+# dt_temp %>% select(idp,visita_num,grup,puntuacion_total_Goldberg)
+# x="puntuacion_total_Goldberg"
+# 
+
+generar_output(x="puntuacion_total_Goldberg",dt=dades_QV_historic) %>% invisible()
+
+generar_output(x="puntuacion_tota_depresion",dt=dades_QV_historic) %>% invisible()
+
+generar_output(x="Kansas_9_Overall_Summary_Score",dt=dades_QV_historic) %>% invisible()
+
+# generar_output(x="Kansas_9_Overall_Summary_Score",dt=dades_QV_historic)
+# 
+# generar_output(x="salud_mental_sf36_items9",dt=dades_QV_historic)
+
+
+```
+
+
+```{r elimino_duplicats}
+
+# eliminat duplicats 
+
+dades<-dades %>% group_by(id_participante) %>% slice(1) %>% ungroup()
+
+
+```
+
+
+
+
+```{r Generar_dummies_cambados, eval=FALSE}
+
+# Vars multiresposta
+
+# vars_multi<-c("CAMBADOS_1_1","CAMBADOS_1_3")
+
+dt_temp<- generar_dummies("CAMBADOS_1_1",dades_CAMBA) %>% mutate("CAMBADOS_1_1_5"=0,"CAMBADOS_1_1_6"=0)
+dades_CAMBA<-dades_CAMBA %>% left_join(dt_temp,by="id_participante") 
+
+
+dt_temp<-generar_dummies("CAMBADOS_1_3",dades_CAMBA) %>% mutate("CAMBADOS_1_3_4"=0,"CAMBADOS_1_3_6"=0)
+dades_CAMBA<-dades_CAMBA %>% left_join(dt_temp,by="id_participante") 
+
+
+```
+
+
+
+```{r recode_comorbidities, eval=FALSE}
+
+# 1. Genero Dummies amb pregunta comorbidities separades per comes
+
+dt_temp<-generar_dummies("comorbilitats",dades) 
+
+
+# 2. Fusiono amb dades i genero comorbiditat_grup
+dades<-dades %>% left_join(dt_temp,by="id_participante") 
+
+# 3.  genero comorbiditat_grup i factoritzo Yes/No
+dades<-
+  dades %>% mutate(comorbiditat_grup=if_else(comorbilitats=="","No","Yes")) %>% 
+  mutate_at(vars(starts_with("comorbilitats_")),  ~ ifelse(.==1,"Yes","No"))
+
+
+```
+
+
+```{r calculs, include=FALSE,eval=FALSE}
+
+dades<-dades %>% mutate(imc_calculat=as.numeric(imc_calculat))
+
+dades<-dades %>% FormatGe::recodificar(taulavariables =path_conductor,criteris = "recode", prefix = "grup")
+
+dades<-dades %>% mutate(edat=round(as.numeric((fecha-Naixement)/365.25),2))
+
+
+```
+
+
+
+```{r processament_cambados,eval=FALSE}
+
+dades_CAMBA<-dades_CAMBA %>% FormatGe::etiquetar_valors(path_conductor,fulla="cambados_levels")
+
+
+# Factoritzar SINO
+dt_cataleg_camba<-readxl::read_excel(path_conductor,sheet="cambados_vars")
+vars_factorSINO<-dt_cataleg_camba %>% filter(factorSINO>0) %>% pull(camp)
+dades_CAMBA<-dades_CAMBA %>% mutate_at(vars_factorSINO,~ifelse(.==1,"Sí","No")) 
+
+# FActoritzar 
+vars_factor<-dt_cataleg_camba %>% filter(factor>0) %>% pull(camp)
+dades_CAMBA<-dades_CAMBA %>% mutate_at(vars_factor,as.factor) 
+
+
+```
+
+
+
+
+
+
+```{r exploratori, include = T,eval=FALSE}
+
+vars_revisar<-c("Drogues","comorbilitats","altres_patologi","indicar_altres")
+# FormatGe::formula_vector(vars_revisar, "") %>% table1::table1(data=dades)
+
+# Explotarori de dades 
+formu<-FormatGe::formula_text("explora","",taulavariables=path_conductor,eliminar = vars_dat )
+table1::table1(formu %>% as.formula(),data=dades)
+
+# Dates
+formu<-FormatGe::formula_vector(vars_dat,"",eliminar = vars_revisar)
+descrTable(formu, data=dades, method = 2, Q1=0,Q3=1, extra.labels = c("","","")) %>% 
+  export2md()
+
+
+
+```
+
+
+
+
+```{r descriptiva_exploratoria_CAMBAS, eval=FALSE}
+
+
+# Anàlisi exploratori II
+
+dades_CAMBA<-dades_CAMBA %>% FormatGe::etiquetar(taulavariables = path_conductor,sheet="cambados_vars")
+
+
+vars_baselines<-dt_cataleg_camba %>% filter(Baseline>0) %>% pull(camp)
+formu<-Macedonia::formula_vector(vars_baselines, "")
+
+descrTable(formu,data=dades_CAMBA, method = 1, Q1=0,Q3=1, extra.labels = c("","","")) %>% export2md()
+
+
+```
+
+***
+
+
+
+
+
+```{r recodes_varis2}
+
+
+
+
+```
+
+
+```{r filtres1}
+
+
+```
+
+
+
+
+```{r flowchart, include=TRUE, eval=FALSE}
+
+
+dades %>% 
+  ggflowchart::Flow_chart_Consort(
+    exclusions = c("Species=='setosa'","Petal.Length>6"),
+    lab_exclusions = c("Specie setona", "Llargada Petal >5"))
+
+
+
+
+
+```
+
+
+```{r filtres2}
+
+
+```
+
+
+
+
+
+
+```{r recodes2, eval=FALSE}
+
+
+#Recodificar automaticament a partir del Conductor!
+#dades<-recodificar(dades,taulavariables =conductor,"recode",missings = T)
+
+#Etquetem (Si/No)  a partir del Conductor!
+dades<- dades %>% mutate_at(vars(starts_with("DG.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+dades<- dades %>% mutate_at(vars(starts_with("EVENT.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+dades<- dades %>% mutate_at(vars(starts_with("FF.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+dades<- dades %>% mutate_at(vars(starts_with("FP.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+
+
+#Etquetem  VALORS! de les VAR  a partir del Conductor!
+#dades<-etiquetar_valors(dt=dades,variables_factors=conductor,fulla="etiquetes",camp_etiqueta="etiqueta1")
+
+
+#Apliquem que surtin els MISSINGS a les TAULES , a partir del CONDUCTOR!
+#dades<-dades%>%mutate_at(extreure.variables("missings",conductor,dt=dades),as.factor)
+
+
+#Cat referencia
+#dades<-dades %>% refcat(conductor = conductor,ref="refcat")
+
+
+```
+
+
+
+```{r etiquetes}
+
+# dades<-dades %>% FormatGe::etiquetar(path_conductor)
+
+```
+
+
+
+```{r Descriptiu_exploratori, eval=FALSE}
+
+
+compareGroups::descrTable(dades,method = 2,Q1=0,Q3=1,extra.labels = c("","","")) %>% export2md()
+
+table1::table1(~ .,dades)
+
+# gtsummary::tbl_summary(dades)
+
+gtsummary::tbl_summary(dades,
+                       type = all_continuous() ~ "continuous2",
+                       statistic = all_continuous() ~ c("{median} ({p25}, {p75})", "{min}, {max}"))
+
+
+
+```
+
+
+
+```{r analisis_pergrups}
+
+
+
+```
+
+
+
+```{r models_estadistics}
+
+
+```
+
+
+
+```{r}
+# References
+
+```
+
+
+
+```
+&nbsp;
+<hr />
+<p style="text-align: center;">A work by $Jordi Real$ </a></p>
+<p style="text-align: center;">$Ll-li System$ </a></p>
+<p style="text-align: center;"><span style="color: #808080;"><em><https://github.com/USR-DAPCAT/></em></span></p>
+
+
