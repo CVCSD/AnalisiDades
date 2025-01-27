@@ -1,0 +1,489 @@
+---
+title: "Projecte CANFANGA. Estudi d'associació de la velocitat amb el tocino"
+author: "Jordi Real"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+   
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+    fig_caption: yes
+    css: logos_css/usr_styles_antic.css
+  
+  word_document:
+    toc: yes
+
+header-includes:
+  \usepackage{booktabs}
+  \usepackage{titling}
+  \usepackage{float}
+  \floatplacement{figure}{H}
+  \pretitle{
+    \begin{center}
+    \vspace{-2cm} 
+    \includegraphics[width=5cm]{CENTER LOGO.png}
+    \hfill
+    \text{}
+    \\[\bigskipamount]
+  }
+  \posttitle{\end{center}}
+
+    
+subtitle: "Informe estadístic"
+website: "https://github.com/USR-DAPCAT/"
+params:
+  mostra: yes
+bibliography: references.bib
+always_allow_html: yes
+---
+
+&nbsp;
+<script>
+   $(document).ready(function() {
+     $head = $('#header');+
+     <!-- $head.prepend('<img src=\"https://www.idiapjgol.org/images/logo.png\" style=\"float: right ;width: 130px;\"/>') -->
+     <!-- $head.prepend('<img src=\"https://avatars2.githubusercontent.com/u/57066591?s=200&v=4\" style=\"margin-left:25% ;width: 80px;\"/>') -->
+     <!-- $head.prepend('<img src=\"codi/logos_css/logo_sant_pau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     <!-- $head.prepend('<img src=\"codi/logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     <!-- $head.prepend('<img src=\"logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     <!-- $head.prepend('<img src=\"../codi/logos_css/logo_santpau.png\" style=\"float: left:1;width: 185px;\"/>') -->
+     <!-- $head.prepend('<img src=\"https://www.santpau.cat/o/HOSSPAU-Public-theme/images/CampusAssistencial-Convicencia-Positiu-Logo.svg\" style=\"float: left:1;width: 285px;\"/>') -->
+     $head.prepend('<img src=\"../codi/CENTER LOGO.png\" style=\"float: left:1;width: 185px;\"/>')
+   });
+</script>
+
+
+<div class="watermark">DRAFT</div>
+
+
+
+
+
+# 0. Estat:
+
+
+**Actualitzacións**
+
+
+$\checkmark$ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX <br/> 
+<!-- &check; cambiado por $\checkmark$ -->
+**Fet**
+
+$\checkmark$ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX <br/>
+
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE, include=T,size="huge",
+                      knitr.kable.NA = '',   # Cómo manejar valores NA en tablas
+                      knitr.table.format = "latexDescriptiu_exploratori",  # Formato de tablas (puede ser "html" o "latex")
+                      fig.pos = 'H',
+                      stringsAsFactors = FALSE) # Evita factores automáticos en data.frame
+
+# Notació no cientifica dels numeros
+# options(scipen = 999)
+
+
+#######################################################
+#
+#
+# libreries i funcions necessaries
+library("dplyr")
+library("lubridate")
+library("compareGroups")
+# library("gtsummary")
+# library("sjPlot")
+# library("tableone")
+library("magrittr")
+library("ggplot2")
+library(kableExtra)
+library(knitr)
+# library("scales")
+#
+#
+# library("purrr")
+
+
+
+```
+
+
+```{r estructura_carpetes, eval=FALSE}
+
+# estructura de carpetes: /dades /codi /outputs /docs
+
+# Genero el directori si no existeic
+directori<-paste0("dades")
+if (!file.exists(directori)) {dir.create(file.path(directori), showWarnings = FALSE)}
+  
+directori<-paste0("codi")
+if (!file.exists(directori)) {dir.create(file.path(directori), showWarnings = FALSE)}
+
+directori<-paste0("outputs")
+if (!file.exists(directori)) {dir.create(file.path(directori), showWarnings = FALSE)}
+
+directori<-paste0("docs")
+if (!file.exists(directori)) {dir.create(file.path(directori), showWarnings = FALSE)}
+
+
+```
+
+
+```{r llegirdades, include = FALSE}
+# Llegir plana
+#
+
+# Exemples de lectura de dades diferents tipus
+
+# path_dades<-here::here("dades","nom_fitxer")
+# 
+# # Opcions per obrir un fitxer
+# dades<-readRDS(path_dades)
+# dades<-readxl::read_excel(path_dades)
+# dades<-data.table::fread(path_dades)
+# dades<-foreign::read.spss(path_dades,use.value.labels = T,to.data.frame = T,...)
+# dades<-read_conductor(path_dades)
+
+
+dades<-iris
+
+#
+
+```
+
+
+# Objectius
+
+## Objectiu general
+
+Avaluar l'efectivitat  de diversos programes de sensibilització, alfabetització i estigma en salut mental portats a terme per infermers/es del "Programa Salut i Escola (SiE)" d’Atenció Primària i l’especialitzada en salut mental en l’augment de coneixements en salut mental i reducció de l'estigma en joves escolaritzats que cursen Estudis Secundaris Obligatoris (ESO)
+
+
+## Especifics 
+
+1 Avaluar l’efectivitat dels programes PS, PASM i PASM+RE per aconseguir una modificació en:
+
+- Coneixements en salut mental als 6 i 12 mesos de seguiment. 
+- Estigma en salut mental  als 6 i 12 mesos de seguiment.
+- Cerca d'ajuda als 6 i 12 mesos de seguiment.
+- Ús de serveis sanitaris als 6 i 12 mesos de seguiment 
+- Símptomes mentals i en l'augment de la salut mental positiva als 6 i 12 mesos de seguiment.  
+- Qualitat de vida als 6 i 12 mesos de seguiment.  
+- Reducció de les conductes d'Assetjament Escolar i Internet als 6 i 12 mesos de seguiment.  
+- Intenció de canvi d'un problema de salut mental als 6 i 12 mesos de seguiment.
+
+
+***
+
+
+# Mètode 
+
+
+## Disseny: 
+
+Estudi observacional transversal
+
+
+## Analisis estadístic: 
+
+Se ha realizado un analisis estadístico descriptivo resumiendo los parámetros cuantitativos con la media y su desviación típica, y las variables cualitativas con la frequencia y su porcentaje. 
+Para evaluar la evolución de cada unos de los parámetros durante las visitas de seguimiento por grupos se realizaron  modelos de efectos mixtos, (Fit Linear Mixed-Effects Models) usando el paquete lme4 de R [@R-lme4; @lme42015] .
+Se consideró como estadísticamente significativo p valores inferiores a 0.05 sin usar la corrección por comparaciones multiples. El analisis estadístico se realizó con el paquete estadístico R[@R-base]
+
+
+
+
+```{r citacions, include=FALSE, message=FALSE}
+
+
+knitr::write_bib(c("lme4","base", "ggplot2","stats", "effectsize"),file="references.bib")
+# 
+# library(bibtex)
+# 
+# # install.packages("bibtex")
+# 
+# refs<-read.bib("references.bib")
+# 
+# keys <- names(refs)
+# 
+# keys
+
+
+```
+
+
+
+
+```{r recodes_varis}
+
+
+```
+
+
+```{r filtres1}
+
+
+```
+
+
+
+
+```{r flowchart, include=TRUE,eval=TRUE}
+
+
+gg_flow_chart<-
+  dades %>% 
+  ggflowchart::Flow_chart_Consort(
+    exclusions = c("Species=='setosa'","Petal.Length>6"),
+    lab_exclusions = c("Specie setona", "Llargada Petal >5"))
+
+
+gg_flow_chart
+
+
+```
+
+
+```{r filtres2}
+
+
+```
+
+
+
+
+
+
+```{r recodes, eval=FALSE}
+
+
+#Recodificar automaticament a partir del Conductor!
+#dades<-recodificar(dades,taulavariables =conductor,"recode",missings = T)
+
+#Etquetem (Si/No)  a partir del Conductor!
+dades<- dades %>% mutate_at(vars(starts_with("DG.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+dades<- dades %>% mutate_at(vars(starts_with("EVENT.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+dades<- dades %>% mutate_at(vars(starts_with("FF.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+dades<- dades %>% mutate_at(vars(starts_with("FP.")), ~if_else(.==1,"Yes","No",missing = "No")) 
+
+
+#Etquetem  VALORS! de les VAR  a partir del Conductor!
+#dades<-etiquetar_valors(dt=dades,variables_factors=conductor,fulla="etiquetes",camp_etiqueta="etiqueta1")
+
+
+#Apliquem que surtin els MISSINGS a les TAULES , a partir del CONDUCTOR!
+#dades<-dades%>%mutate_at(extreure.variables("missings",conductor,dt=dades),as.factor)
+
+
+#Cat referencia
+#dades<-dades %>% refcat(conductor = conductor,ref="refcat")
+
+
+```
+
+
+
+```{r etiquetes}
+
+
+```
+
+
+
+# Resultats
+
+
+
+
+# Títol de primer nivell
+## Títol de segon nivell
+### Títol de tercer nivell
+*Text en cursiva*
+**Text en negreta**
+***Text en cursiva i negreta***
+L'equacio seria $e=mc^2$
+
+
+## Exploratoria General de totes les variables.
+
+
+\newpage
+
+```{r Descriptiu_exploratori, include=TRUE, fig.pos="H"}
+
+
+T1_compare<-compareGroups::descrTable(dades,method = 2,Q1=0,Q3=1,extra.labels = c("","","")) 
+
+T1_compare %>% export2md(, format = "markdown")
+
+```
+
+```{r  Descriptiu_exploratori2, include=TRUE , fig.pos="H"}
+T2_compare<-compareGroups::descrTable(Species ~ Sepal.Length+ Sepal.Width + Petal.Length, data=dades,extra.labels = c("","","")) 
+
+T2_compare <- compareGroups(Species ~ ., data = iris)
+T2_table <- createTable(T2_compare)
+
+T1_table1<-table1::table1(~ .,dades, caption="T1. Descriptiva global")
+
+T1_table1
+
+T2_table1<-table1::table1( ~ Sepal.Length+ Sepal.Width + Petal.Length | Species ,dades, caption="T2. Descriptiva bivariada")
+
+
+T2_table1
+
+# gtsummary::tbl_summary(dades)
+
+# T1_gt<-gtsummary::tbl_summary(dades,
+#                        type = all_continuous() ~ "continuous2",
+#                        statistic = all_continuous() ~ c("{median} ({p25}, {p75})", "{min}, {max}"))
+
+# T1_gt 
+```
+
+
+## Taules buides
+
+```{r taules_buides}
+
+T1_compare %>% export2md(format="markdown") %>% 
+  flextable::void(j=-1) %>% 
+  flextable::void(j=2, part = "header")
+
+table1::t1flex(T1_table1) %>% flextable::void(j=-1) 
+
+
+# T1_gt %>% gtsummary::as_flex_table() %>% flextable::void(j=-1) 
+
+```
+
+
+## Descriptiu
+
+```{r analisis_pergrups}
+
+T1_kable <- dades %>% head() %>% 
+  bind_cols(dades %>% head()) %>% 
+  bind_cols(dades %>% head()) %>% 
+  kableExtra::kable(caption = "Mostra de dades") %>% 
+  kableExtra::kable_classic_2()
+
+dades %>% head() %>% flextable::flextable()
+
+T1_kable 
+
+
+# class(T1_kable)
+# 
+# kables_en_llista <-capturar_objectes_entorn_en_lista(tipo=c("kableExtra"))
+
+```
+
+## Models estadistics
+
+```{r models_estadistics}
+
+
+```
+
+## Figures
+
+```{r plots}
+
+
+fig2_plot<-plot(dades$Sepal.Length,dades$Petal.Length)
+
+fig2_gg<-
+  ggplot2::ggplot(dades, aes(Sepal.Length,Petal.Length)) +
+  ggplot2::geom_point()
+
+
+fig2_plot
+  
+fig2_gg
+
+```
+
+
+
+
+
+
+
+```{r generar_document_word}
+
+
+source("generar_informe_word.R")
+nom_arxiu_Rmd <- knitr::current_input()
+# 
+# generar_informe_word(path_arxiu="2_Analisi.Rmd" ,path_informe=here::here("outputs","informeKK.docx"))
+# 
+# generar_informe_word(path_arxiu=here::here("codi","2_Analisi.Rmd") ,path_informe=here::here("outputs","informe_mierda2.docx"))
+
+generar_informe_word(path_arxiu="2_Analisi.Rmd" ,path_informe=here::here("outputs","informe_ray.docx"))
+
+
+
+
+
+# ps <- prop_section(
+#   page_size = page_size(orient = "landscape"),
+#   page_margins = page_mar(top = 2),
+#   type = "continuous")
+# 
+# block_section(ps)
+
+
+```
+
+
+```{r, salvar_objecte_kable, eval=FALSE}
+
+mi_tabla_kableextra <- 
+  kableExtra::kable(mtcars[1:5, 1:5], "html", booktabs = TRUE) %>%
+  kableExtra::kable_styling(full_width = FALSE)  # Establece full_width en FALSE para que no se extienda al ancho completo
+
+
+# Guardar la tabla como un archivo HTML temporal
+tmp_html <- tempfile(fileext = ".html")
+kableExtra::save_kable(T1_kable, file = tmp_html)
+
+# Crear un nuevo documento Word
+doc <- officer::read_docx()
+
+# Agregar la tabla HTML al documento Word
+doc <- doc %>%
+  officer::body_add_fpar(" ", style = "Normal") %>%  # Agregar un párrafo vacío
+  officer::body_add_img(src = tmp_html, width = 6, height = 4)  # Insertar el archivo HTML como una imagen
+
+doc <- doc %>%
+  officer::body_add_fpar(as_paragraph(as_html(tmp_html)), style = "Normal")
+
+doc %>% officer::body_add_img(tmp_html)
+
+officer::body_add_
+body_add_html
+
+# Guardar el documento Word
+print(doc, target = "tabla_word_con_formato.docx")
+
+
+
+
+```
+
+
+
+# References
+
+```
+&nbsp;
+<hr />
+<p style="text-align: center;">A work by $Jordi Real$ $Rai Puig$ </a></p>
+<p style="text-align: center;">$Llepali System$ </a></p>
+<p style="text-align: center;"><span style="color: #808080;"><em><https://github.com/USR-DAPCAT/></em></span></p>
+
+
