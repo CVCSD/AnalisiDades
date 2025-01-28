@@ -10,6 +10,7 @@ rmarkdown::render("codi/2_Analisi.2.Rmd",
                   output_file = here::here("outputs",paste0("Informe_estadistic_analisi",Sys.Date())), output_format = "html_document")
 
 
+
 rmarkdown::render("codi/2_Analisi.2.Rmd", 
                   output_file = here::here("outputs",paste0("Informe_estadistic_analisi",Sys.Date())),   output_format = "pdf_document")
 

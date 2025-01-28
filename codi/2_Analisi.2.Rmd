@@ -4,14 +4,15 @@ author: "Jordi Real"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
    
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     fig_caption: yes
     css: logos_css/usr_styles_antic.css
-  
+
+  pdf_document:
+    toc: yes
+
   word_document:
     toc: yes
 
@@ -371,9 +372,19 @@ T1_kable <- dades %>% head() %>%
   kableExtra::kable(caption = "Mostra de dades") %>% 
   kableExtra::kable_classic_2()
 
-dades %>% head() %>% flextable::flextable()
+# T1_kable <- dades %>% head() %>% 
+#   bind_cols(dades %>% head()) %>% 
+#   bind_cols(dades %>% head()) %>% 
+#   kableExtra::kable(caption = "Mostra de dades", format = "latex") %>% 
+#   kableExtra::kable_classic_2()
 
+
+dades %>% head() %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
+
+
+# No renderitza be aquesta taula amb pdf desdel render
 T1_kable 
+
 
 
 # class(T1_kable)
