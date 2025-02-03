@@ -3,15 +3,16 @@ title: "Projecte CANFANGA. Estudi d'associació de la velocitat amb el tocino"
 author: "Jordi Real"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-   
+
+  pdf_document:
+    toc: yes
+    
   html_document:
     toc: yes
     toc_float: yes
     fig_caption: yes
     css: logos_css/usr_styles_antic.css
 
-  pdf_document:
-    toc: yes
 
   word_document:
     toc: yes
@@ -20,6 +21,7 @@ header-includes:
   \usepackage{booktabs}
   \usepackage{titling}
   \usepackage{float}
+  \usepackage{longtable}
   \floatplacement{figure}{H}
   \pretitle{
     \begin{center}
@@ -101,12 +103,14 @@ library("magrittr")
 library("ggplot2")
 library(kableExtra)
 library(knitr)
+library(flextable)
 # library("scales")
 #
 #
 # library("purrr")
 
-
+# Variable per detectar el format de sortida
+output_format <- knitr::opts_knit$get('rmarkdown.pandoc.to')
 
 ```
 
@@ -364,14 +368,82 @@ table1::t1flex(T1_table1) %>% flextable::void(j=-1)
 
 ## Descriptiu
 
-```{r analisis_pergrups}
+```{r analisis_pergrups, eval=FALSE}
+if(output_format=="pdf"){ 
+  T1_kable <- dades %>% head() %>% 
+    bind_cols(dades %>% head()) %>% 
+    bind_cols(dades %>% head()) %>% 
+    #booktabs millora el format de la  taula
+    kableExtra::kable(caption = "Mostra de dades", format = "latex", booktabs = TRUE) %>% 
+    kableExtra::kable_classic_2() %>%
+    # Hold_position evita que la taula aparegui a un altre
+    kable_styling(latex_options = c("striped", "hold_position"))}
+else{
+    T1_kable <- dades %>% head() %>% 
+    bind_cols(dades %>% head()) %>% 
+    bind_cols(dades %>% head()) %>% 
+    #booktabs millora el format de la  taula
+    kableExtra::kable(caption = "Mostra de dades", booktabs = TRUE) %>% 
+    kableExtra::kable_classic_2()
+}
+# surt be la taula pero no es un kable
+#T1_kable <- dades %>% head() %>% 
+#  bind_cols(dades %>% head()) %>% 
+#  bind_cols(dades %>% head()) %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
 
-T1_kable <- dades %>% head() %>% 
-  bind_cols(dades %>% head()) %>% 
-  bind_cols(dades %>% head()) %>% 
-  kableExtra::kable(caption = "Mostra de dades") %>% 
-  kableExtra::kable_classic_2()
 
+
+# Teula mal impresa quan es fa un render
+# T1_kable <- dades %>% head() %>% 
+#   bind_cols(dades %>% head()) %>% 
+#   bind_cols(dades %>% head()) %>% 
+#   kableExtra::kable(caption = "Mostra de dades", format = "latex") %>% 
+#   kableExtra::kable_classic_2()
+
+
+dades %>% head() %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
+
+
+# No renderitza be aquesta taula amb pdf desdel render
+T1_kable 
+
+
+
+# class(T1_kable)
+# 
+# kables_en_llista <-capturar_objectes_entorn_en_lista(tipo=c("kableExtra"))
+
+```
+
+
+```{r analisis_pergrups_prova}
+while(output_format=="pdf"){
+  T1_kable <- dades %>% head() %>% 
+    bind_cols(dades %>% head()) %>% 
+    bind_cols(dades %>% head()) %>% 
+    #booktabs millora el format de la  taula
+    kableExtra::kable(caption = "Mostra de dades", format = "latex", booktabs = TRUE) %>% 
+    kableExtra::kable_classic_2() %>%
+    # Hold_position evita que la taula aparegui a un altre
+    kable_styling(latex_options = c("striped", "hold_position"))
+}
+
+while (output_format!="pdf") {
+  T1_kable <- dades %>% head() %>% 
+    bind_cols(dades %>% head()) %>% 
+    bind_cols(dades %>% head()) %>% 
+    #booktabs millora el format de la  taula
+    kableExtra::kable(caption = "Mostra de dades", booktabs = TRUE) %>% 
+    kableExtra::kable_classic_2()
+}
+# surt be la taula pero no es un kable
+#T1_kable <- dades %>% head() %>% 
+#  bind_cols(dades %>% head()) %>% 
+#  bind_cols(dades %>% head()) %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
+
+
+
+# Teula mal impresa quan es fa un render
 # T1_kable <- dades %>% head() %>% 
 #   bind_cols(dades %>% head()) %>% 
 #   bind_cols(dades %>% head()) %>% 
