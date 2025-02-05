@@ -22,6 +22,8 @@ header-includes:
   \usepackage{titling}
   \usepackage{float}
   \usepackage{longtable}
+
+  
   \floatplacement{figure}{H}
   \pretitle{
     \begin{center}
@@ -31,7 +33,6 @@ header-includes:
     \text{}
     \\[\bigskipamount]
   }
-  \posttitle{\end{center}}
 
     
 subtitle: "Informe estadístic"
@@ -57,6 +58,26 @@ always_allow_html: yes
    });
 </script>
 
+  <!--  Afegir a la part de header-includes: linea 20
+        Si es vol afegir el logo o alguna informació la part superior de la pagina (\fancyhead[L] , [L] denota el costat) o la inferiro (\fancyfoot[L])
+        
+    \usepackage{array}
+    \usepackage{multirow}
+    \usepackage{wrapfig}
+    \usepackage{pdflscape}
+    \usepackage{tabu}
+    \usepackage{threeparttable}
+    \usepackage[normalem]{ulem}
+    \usepackage{graphicx}
+    \usepackage{fancyhdr}
+    \pagestyle{fancy}
+
+       \setlength\headheight{35pt}
+       \fancyhead[L]{\includegraphics[width=3cm]{logos_css/CENTER LOGO.png}}
+       \fancyfoot[LE,RO]{logos_css/CENTER LOGO.png}
+       \posttitle{\end{center}}
+       
+  -->
 
 <div class="watermark">DRAFT</div>
 
@@ -179,8 +200,6 @@ Avaluar l'efectivitat  de diversos programes de sensibilització, alfabetitzaci�
 - Reducció de les conductes d'Assetjament Escolar i Internet als 6 i 12 mesos de seguiment.  
 - Intenció de canvi d'un problema de salut mental als 6 i 12 mesos de seguiment.
 
-
-***
 
 
 # Mètode 
@@ -325,7 +344,7 @@ T1_compare %>% export2md(format = "markdown")
 
 ```
 
-```{r  Descriptiu_exploratori2, include=TRUE , fig.pos="H"}
+```{r Descriptiu_exploratori_2, include=TRUE , fig.pos="H"}
 T2_compare<-compareGroups::descrTable(Species ~ Sepal.Length+ Sepal.Width + Petal.Length, data=dades,extra.labels = c("","","")) 
 
 T2_compare <- compareGroups(Species ~ ., data = iris)
@@ -368,88 +387,16 @@ table1::t1flex(T1_table1) %>% flextable::void(j=-1)
 
 ## Descriptiu
 
-```{r analisis_pergrups, eval=FALSE}
-if(output_format=="pdf"){ 
+```{r analisis_pergrups}
+  # Format necessita que el format de sortida del document, output_format és "latex" per a pdf i "html" per a HTML just el que demana la funció
   T1_kable <- dades %>% head() %>% 
     bind_cols(dades %>% head()) %>% 
     bind_cols(dades %>% head()) %>% 
     #booktabs millora el format de la  taula
-    kableExtra::kable(caption = "Mostra de dades", format = "latex", booktabs = TRUE) %>% 
-    kableExtra::kable_classic_2() %>%
-    # Hold_position evita que la taula aparegui a un altre
-    kable_styling(latex_options = c("striped", "hold_position"))}
-else{
-    T1_kable <- dades %>% head() %>% 
-    bind_cols(dades %>% head()) %>% 
-    bind_cols(dades %>% head()) %>% 
-    #booktabs millora el format de la  taula
-    kableExtra::kable(caption = "Mostra de dades", booktabs = TRUE) %>% 
-    kableExtra::kable_classic_2()
-}
-# surt be la taula pero no es un kable
-#T1_kable <- dades %>% head() %>% 
-#  bind_cols(dades %>% head()) %>% 
-#  bind_cols(dades %>% head()) %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
-
-
-
-# Teula mal impresa quan es fa un render
-# T1_kable <- dades %>% head() %>% 
-#   bind_cols(dades %>% head()) %>% 
-#   bind_cols(dades %>% head()) %>% 
-#   kableExtra::kable(caption = "Mostra de dades", format = "latex") %>% 
-#   kableExtra::kable_classic_2()
-
-
-dades %>% head() %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
-
-
-# No renderitza be aquesta taula amb pdf desdel render
-T1_kable 
-
-
-
-# class(T1_kable)
-# 
-# kables_en_llista <-capturar_objectes_entorn_en_lista(tipo=c("kableExtra"))
-
-```
-
-
-```{r analisis_pergrups_prova}
-while(output_format=="pdf"){
-  T1_kable <- dades %>% head() %>% 
-    bind_cols(dades %>% head()) %>% 
-    bind_cols(dades %>% head()) %>% 
-    #booktabs millora el format de la  taula
-    kableExtra::kable(caption = "Mostra de dades", format = "latex", booktabs = TRUE) %>% 
+    kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
     kableExtra::kable_classic_2() %>%
     # Hold_position evita que la taula aparegui a un altre
     kable_styling(latex_options = c("striped", "hold_position"))
-}
-
-while (output_format!="pdf") {
-  T1_kable <- dades %>% head() %>% 
-    bind_cols(dades %>% head()) %>% 
-    bind_cols(dades %>% head()) %>% 
-    #booktabs millora el format de la  taula
-    kableExtra::kable(caption = "Mostra de dades", booktabs = TRUE) %>% 
-    kableExtra::kable_classic_2()
-}
-# surt be la taula pero no es un kable
-#T1_kable <- dades %>% head() %>% 
-#  bind_cols(dades %>% head()) %>% 
-#  bind_cols(dades %>% head()) %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
-
-
-
-# Teula mal impresa quan es fa un render
-# T1_kable <- dades %>% head() %>% 
-#   bind_cols(dades %>% head()) %>% 
-#   bind_cols(dades %>% head()) %>% 
-#   kableExtra::kable(caption = "Mostra de dades", format = "latex") %>% 
-#   kableExtra::kable_classic_2()
-
 
 dades %>% head() %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
 
