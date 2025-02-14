@@ -103,7 +103,7 @@ generar_informe_word<-function(path_arxiu="2_Analisi.Rmd",path_informe=here::her
   # Capssalera 
   report_doc<-
     officer::read_docx() %>% 
-    officer::body_add_img(src = here::here("codi/logos_css/logo_santpau.png"),height = 1, width = 2) %>% 
+    officer::body_add_img(src = here::here("codi/logos_css/CENTER LOGO.png"),height = 1, width = 2) %>% 
     officer::body_add_par(titul_heading1, style = "heading 1") %>% 
     officer::body_add_par(subtitul_heading1, style = "heading 1") %>% 
     officer::body_add_par(author_heading1, style = "Normal") 
