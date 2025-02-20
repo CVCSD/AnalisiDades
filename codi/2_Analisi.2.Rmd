@@ -3,14 +3,14 @@ title: "Projecte CANFANGA. Estudi d'associació de la velocitat amb el tocino"
 author: "Jordi Real"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  word_document:
-    toc: yes
   html_document:
     embed-resources: true
     toc: yes
     toc_float: yes
     fig_caption: yes
     css: logos_css/usr_styles_antic.css
+  word_document:
+    toc: yes
   pdf_document:
     
     toc: yes
@@ -93,8 +93,14 @@ knitr::include_graphics("logos_css/CENTER LOGO.png")
 **Actualitzacións**
 
 
+- YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY <br/> 
+
+- YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY <br/> 
+
+
 $\checkmark$ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX <br/> 
 <!-- &check; cambiado por $\checkmark$ -->
+
 **Fet**
 
 $\checkmark$ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX <br/>
@@ -135,10 +141,14 @@ library(flextable)
 # Variable per detectar el format de sortida
 output_format <- knitr::opts_knit$get('rmarkdown.pandoc.to')
 output_format <- ifelse(output_format != "latex" & output_format!= "html", "markdown", output_format)
+
+
 ```
 
-```{r}
+```{r, include=FALSE}
+
 output_format
+
 ```
 
 
@@ -434,6 +444,9 @@ dividir_taula <- function(taula, n_columnes = 6) {
   return(taules_reduides)
 }
 
+
+ 
+# output_format <- "html"
 kable_dividida <- function(dd = dd_T1, n_columnes = 5){
   # dd=dd_T1
   # n_columnes = 5
@@ -445,7 +458,7 @@ kable_dividida <- function(dd = dd_T1, n_columnes = 5){
       # Hold_position evita que la taula aparegui a un altre
       kable_styling(latex_options = c("striped", "hold_position")) 
     
-} else  #if(output_format=="latex"){
+} else  if(output_format!="html"){
       taules <- dividir_taula(dd, n_columnes = n_columnes)
       taules <- taules %>%
       lapply(function(bloc) {
@@ -471,7 +484,7 @@ kable_dividida <- function(dd = dd_T1, n_columnes = 5){
   #         print()
   #       }
   #   
-  # }
+   }
   
 }
 
@@ -593,10 +606,9 @@ print(doc, target = "tabla_word_con_formato.docx")
 
 # References
 
-```
 &nbsp;
 <hr />
-<p style="text-align: center;">A work by $Jordi Real$ $Rai Puig$ </a></p>
+<p style="text-align: center;">A work by $Jordi Real$ $Aleix Barnils$ </a></p>
 <p style="text-align: center;">$Llepali System$ </a></p>
 <p style="text-align: center;"><span style="color: #808080;"><em><https://github.com/USR-DAPCAT/></em></span></p>
 
