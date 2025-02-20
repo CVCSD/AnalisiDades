@@ -134,10 +134,12 @@ library(flextable)
 
 # Variable per detectar el format de sortida
 output_format <- knitr::opts_knit$get('rmarkdown.pandoc.to')
-output_format
-output_format <- ifelse(output_format != "pdf" | output_format!= "html", "markdown", output_format)
+output_format <- ifelse(output_format != "latex" & output_format!= "html", "markdown", output_format)
 ```
 
+```{r}
+output_format
+```
 
 
 
@@ -393,15 +395,16 @@ table1::t1flex(T1_table1) %>% flextable::void(j=-1)
 
 ## Descriptiu
 
-```{r analisis_pergrups}
+```{r analisis_pergrups, results='asis'}  
+# results asis es per fer que l'rmd interpreti correctaament el codi latex
 dd_T1 <- dades %>% head() %>% 
     bind_cols(dades %>% head()) %>% 
     bind_cols(dades %>% head())
 
 
-# Format necessita que el format de sortida del document, output_format és "latex" per a pdf i "html" per a HTML just el que demana la funció
-# Word no treballa bé amb kable aixi que en fem flextable per a document word
-T1_kable_directe <-  if(output_format=="pdf"|output_format=="html") {dd_T1 %>% 
+# Format necessita el format de sortida del document, output_format és "latex" per a pdf i "html" per a HTML just el que demana la funció
+# Word no treballa bé amb kable aixi que en fem flextable per a document word, el parametre de results="asis" si que permet posar taula kable a word
+T1_kable_directe <-  if(output_format=="pdf" | output_format=="html") {dd_T1 %>% 
     #booktabs millora el format de la  taula
     kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
     kableExtra::kable_classic_2() %>%
@@ -415,11 +418,15 @@ T1_kable_directe <-  if(output_format=="pdf"|output_format=="html") {dd_T1 %>%
 
 dades %>% head() %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
 
-
+T1_kable_directe
 
 # taules llargues
 # com la taula te moltes columnes fem una funció que divideixi la taula en blocs de columnes i l'imprimeixi per parts
 dividir_taula <- function(taula, n_columnes = 6) {
+  
+  # taula=dd_T1
+  # n_columnes = 5
+  
   n_col <- ncol(taula)
   blocs <- split(1:n_col, ceiling(seq_along(1:n_col) / n_columnes))
   taules_reduides <- lapply(blocs, function(cols){
@@ -427,40 +434,64 @@ dividir_taula <- function(taula, n_columnes = 6) {
   return(taules_reduides)
 }
 
-T1_kable_dividida <-  if(output_format=="html") {dd_T1 %>% 
+kable_dividida <- function(dd = dd_T1, n_columnes = 5){
+  # dd=dd_T1
+  # n_columnes = 5
+  if(output_format=="html") { 
     #booktabs millora el format de la  taula
-    kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
-    kableExtra::kable_classic_2() %>%
-    # Hold_position evita que la taula aparegui a un altre
-    kable_styling(latex_options = c("striped", "hold_position"))
-} else if(output_format=="latex"){dividir_taula(dd_T1, n_columnes = 5) %>% 
+    dd %>% 
+      kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
+      kableExtra::kable_classic_2() %>%
+      # Hold_position evita que la taula aparegui a un altre
+      kable_styling(latex_options = c("striped", "hold_position")) 
+    
+} else  #if(output_format=="latex"){
+      taules <- dividir_taula(dd, n_columnes = n_columnes)
+      taules <- taules %>%
       lapply(function(bloc) {
-    bloc %>% 
-    kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
-    kableExtra::kable_classic_2() %>%
-    # Hold_position evita que la taula aparegui a un altre
-    kable_styling(latex_options = c("striped", "hold_position"))
+      bloc %>%
+      kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>%
+      kableExtra::kable_classic_2() %>%
+      # Hold_position evita que la taula aparegui a un altre
+      kable_styling(latex_options = c("striped", "hold_position"))
   })
-} else {
-    dividir_taula(dd_T1, n_columnes = 5) %>% lapply(function(bloc) {
-      bloc %>% 
-      flextable() %>%
-        autofit() %>%
-        width(width = 1.3)
-  })
+
+      for(i in 1:length(taules)){
+        i <- as.character(i)
+        print(taules[[i]])
+      }
+  # en el cas que es prefereixi flextable per wprd, ja que segons les dades es pot veure malament un kbl
+  #   } else { # per a word
+  #       taules <- dividir_taula(dd, n_columnes = n_columnes)
+  #       for(bloc in taules) {
+  #         bloc %>% 
+  #         flextable() %>%
+  #         autofit() %>%
+  #         width(width = 1.3) %>% 
+  #         print()
+  #       }
+  #   
+  # }
+  
 }
 
-
-for(i in T1_kable_dividida) {i}
-
+kable_dividida(dd_T1, n_columnes = 5)
 
 
+# funcion d'interes
 
-#T1_kable 
+      # forçar salt de pagina
+      # cat("\\newpage\n")
 
-# class(T1_kable)
-# 
-# kables_en_llista <-capturar_objectes_entorn_en_lista(tipo=c("kableExtra"))
+  #dins dels kable a latex_options:
+# - **`longtable`**: Divide la tabla en varias páginas si es necesario.
+# - **`striped`**: Añade líneas alternadas en las filas para mejorar la legibilidad.
+# - **`hold_position`**: Mantiene la tabla en la posición donde la defines.
+# - **`centering`**: Centra la tabla en la página.
+# - **`scale_down`**: Escala la tabla para que quepa en una página.
+# - **`booktabs`**: Aplica el formato de `booktabs` para mejorar el estilo de la tabla.
+# - **`size`**: Permite ajustar el tamaño de la tabla.
+
 
 ```
 
