@@ -8,21 +8,36 @@ output:
     toc: yes
     toc_float: yes
     fig_caption: yes
-    css: logos_css/usr_styles_antic.css
+    css: logos_css/usr_styles.css
   word_document:
+    reference_docx: "logos_css/format_word.docx"
     toc: yes
   pdf_document:
-    
+    latex_engine: xelatex
     toc: yes
+    includes:
+      in_header: logos_css/latex_format.tex
+    extra_dependencies:
+      - geometry
+      - xcolor
+      - titlesec
+      - fontspec
+      - graphicx
+      - eso-pic
+      - sectsty
+      - helvet
 header-includes:
+  \usepackage{sectsty}  
+  \usepackage{titlesec}  
+  \usepackage{helvet}
   \usepackage{booktabs}
   \usepackage{titling}
   \usepackage{float}
   \usepackage{longtable}
-  
   \floatplacement{figure}{H}
   \pretitle{
     \begin{center}
+    \fontsize{20}{25}\color[rgb]{0.937,0.462,0.133}  % Título más grande y de color naranja
     \vspace{-2cm} 
     \includegraphics[width=5cm]{logos_css/CENTER LOGO.png}
     \hfill
@@ -30,8 +45,11 @@ header-includes:
     \\[\bigskipamount]
     }
     \posttitle{\end{center}}
-    
-    
+    \preauthor{\begin{center}\large}
+    \postauthor{\end{center}}
+    \predate{\begin{center}\normalsize}
+    \postdate{\end{center}}
+
 subtitle: "Informe estadístic"
 website: "https://github.com/USR-DAPCAT/"
 params:
@@ -89,7 +107,6 @@ knitr::include_graphics("logos_css/CENTER LOGO.png")
 
 # 0. Estat:
 
-
 **Actualitzacións**
 
 
@@ -122,6 +139,11 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE, include=T,size
 #
 #
 # libreries i funcions necessaries
+# tinytex::tlmgr_install("titlesec")
+
+
+
+
 library("dplyr")
 library("lubridate")
 library("compareGroups")
@@ -145,9 +167,84 @@ output_format <- ifelse(output_format != "latex" & output_format!= "html", "mark
 
 ```
 
-```{r, include=FALSE}
+```{r funcions, include=FALSE}
 
-output_format
+
+
+
+# funcion d'interes
+
+      # forçar salt de pagina
+      # cat("\\newpage\n")
+
+  #dins dels kable a latex_options:
+# - **`longtable`**: Divide la tabla en varias páginas si es necesario.
+# - **`striped`**: Añade líneas alternadas en las filas para mejorar la legibilidad.
+# - **`hold_position`**: Mantiene la tabla en la posición donde la defines.
+# - **`centering`**: Centra la tabla en la página.
+# - **`scale_down`**: Escala la tabla para que quepa en una página.
+# - **`booktabs`**: Aplica el formato de `booktabs` para mejorar el estilo de la tabla.
+# - **`size`**: Permite ajustar el tamaño de la tabla.
+
+# Format necessita el format de sortida del document, output_format és "latex" per a pdf i "html" per a HTML just el que demana la funció
+# Word no treballa bé amb kable aixi que en fem flextable per a document word, el parametre de results="asis" si que permet posar taula kable a word
+
+T1_kable_directe <-   function(dd = dd_T1, n_columnes = 5){
+  # dd=dd_T1
+  # n_columnes = 5 
+  if(output_format=="latex" | output_format=="html") {dd %>% 
+    #booktabs millora el format de la  taula
+    kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
+    kableExtra::kable_classic_2() %>%
+    # Hold_position evita que la taula aparegui a un altre
+    kable_styling(latex_options = c("striped", "hold_position"))
+} else {flextable(dd) %>%
+  autofit() %>%
+  width(width = 2)}# definex ample de columnes de la taula
+}
+
+# output_format <- "html"
+kable_dividida <- function(dd = dd_T1, n_columnes = 5){
+  # dd=dd_T1
+  # n_columnes = 5
+  if(output_format=="html") { 
+    #booktabs millora el format de la  taula
+    dd %>% 
+      kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
+      kableExtra::kable_classic_2() %>%
+      # Hold_position evita que la taula aparegui a un altre
+      kable_styling(latex_options = c("hold_position","striped")) 
+    
+} else  if(output_format!="html"){
+      taules <- dividir_taula(dd, n_columnes = n_columnes)
+      taules <- taules %>%
+      lapply(function(bloc) {
+      bloc %>%
+      kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>%
+      kableExtra::kable_classic_2() %>%
+      # Hold_position evita que la taula aparegui a un altre
+      kable_styling(latex_options = c("striped", "hold_position"))
+  })
+
+      for(i in 1:length(taules)){
+        i <- as.character(i)
+        print(taules[[i]])
+      }
+  # en el cas que es prefereixi flextable per wprd, ja que segons les dades es pot veure malament un kbl
+  #   } else { # per a word
+  #       taules <- dividir_taula(dd, n_columnes = n_columnes)
+  #       for(bloc in taules) {
+  #         bloc %>% 
+  #         flextable() %>%
+  #         autofit() %>%
+  #         width(width = 1.3) %>% 
+  #         print()
+  #       }
+  #   
+   }
+  
+}
+
 
 ```
 
@@ -412,23 +509,17 @@ dd_T1 <- dades %>% head() %>%
     bind_cols(dades %>% head())
 
 
-# Format necessita el format de sortida del document, output_format és "latex" per a pdf i "html" per a HTML just el que demana la funció
-# Word no treballa bé amb kable aixi que en fem flextable per a document word, el parametre de results="asis" si que permet posar taula kable a word
-T1_kable_directe <-  if(output_format=="pdf" | output_format=="html") {dd_T1 %>% 
+dd_T1 %>% 
     #booktabs millora el format de la  taula
     kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
     kableExtra::kable_classic_2() %>%
     # Hold_position evita que la taula aparegui a un altre
-    kable_styling(latex_options = c("striped", "hold_position"))
-} else {flextable(dd_T1) %>%
-  autofit() %>%
-  width(width = 2)}# definex ample de columnes de la taula
-
+    kable_styling(latex_options = c( "hold_position"))
 
 
 dades %>% head() %>% flextable::flextable() %>% set_caption(caption = "Mostra de dades", style = "Table Caption")
 
-T1_kable_directe
+T1_kable_directe(dd_T1)
 
 # taules llargues
 # com la taula te moltes columnes fem una funció que divideixi la taula en blocs de columnes i l'imprimeixi per parts
@@ -445,67 +536,7 @@ dividir_taula <- function(taula, n_columnes = 6) {
 }
 
 
- 
-# output_format <- "html"
-kable_dividida <- function(dd = dd_T1, n_columnes = 5){
-  # dd=dd_T1
-  # n_columnes = 5
-  if(output_format=="html") { 
-    #booktabs millora el format de la  taula
-    dd %>% 
-      kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>% 
-      kableExtra::kable_classic_2() %>%
-      # Hold_position evita que la taula aparegui a un altre
-      kable_styling(latex_options = c("striped", "hold_position")) 
-    
-} else  if(output_format!="html"){
-      taules <- dividir_taula(dd, n_columnes = n_columnes)
-      taules <- taules %>%
-      lapply(function(bloc) {
-      bloc %>%
-      kableExtra::kable(caption = "Mostra de dades", format = output_format, booktabs = TRUE) %>%
-      kableExtra::kable_classic_2() %>%
-      # Hold_position evita que la taula aparegui a un altre
-      kable_styling(latex_options = c("striped", "hold_position"))
-  })
-
-      for(i in 1:length(taules)){
-        i <- as.character(i)
-        print(taules[[i]])
-      }
-  # en el cas que es prefereixi flextable per wprd, ja que segons les dades es pot veure malament un kbl
-  #   } else { # per a word
-  #       taules <- dividir_taula(dd, n_columnes = n_columnes)
-  #       for(bloc in taules) {
-  #         bloc %>% 
-  #         flextable() %>%
-  #         autofit() %>%
-  #         width(width = 1.3) %>% 
-  #         print()
-  #       }
-  #   
-   }
-  
-}
-
 kable_dividida(dd_T1, n_columnes = 5)
-
-
-# funcion d'interes
-
-      # forçar salt de pagina
-      # cat("\\newpage\n")
-
-  #dins dels kable a latex_options:
-# - **`longtable`**: Divide la tabla en varias páginas si es necesario.
-# - **`striped`**: Añade líneas alternadas en las filas para mejorar la legibilidad.
-# - **`hold_position`**: Mantiene la tabla en la posición donde la defines.
-# - **`centering`**: Centra la tabla en la página.
-# - **`scale_down`**: Escala la tabla para que quepa en una página.
-# - **`booktabs`**: Aplica el formato de `booktabs` para mejorar el estilo de la tabla.
-# - **`size`**: Permite ajustar el tamaño de la tabla.
-
-
 ```
 
 ## Models estadistics
