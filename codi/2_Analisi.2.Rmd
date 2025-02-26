@@ -1,17 +1,14 @@
 ---
 title: "Projecte CANFANGA. Estudi d'associació de la velocitat amb el tocino"
+subtitle: "Informe estadístic"
 author: "Jordi Real"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  html_document:
-    embed-resources: true
-    toc: yes
-    toc_float: yes
-    fig_caption: yes
-    css: logos_css/usr_styles.css
   word_document:
-    reference_docx: "logos_css/format_word.docx"
+    reference_docx: "logos_css/format_word_2.docx"
     toc: yes
+  bookdown::html_document2:
+    keep_yaml: true
   pdf_document:
     latex_engine: xelatex
     toc: yes
@@ -26,6 +23,12 @@ output:
       - eso-pic
       - sectsty
       - helvet
+  html_document:
+    embed-resources: true
+    toc: yes
+    toc_float: yes
+    fig_caption: yes
+    css: logos_css/usr_styles.css
 header-includes:
   \usepackage{sectsty}  
   \usepackage{titlesec}  
@@ -37,20 +40,24 @@ header-includes:
   \floatplacement{figure}{H}
   \pretitle{
     \begin{center}
-    \fontsize{20}{25}\color[rgb]{0.937,0.462,0.133}  % Título más grande y de color naranja
-    \vspace{-2cm} 
+    \color[rgb]{0.937, 0.462, 0.133}\fontsize{22}{25}\bfseries  
     \includegraphics[width=5cm]{logos_css/CENTER LOGO.png}
     \hfill
     \text{}
     \\[\bigskipamount]
     }
     \posttitle{\end{center}}
-    \preauthor{\begin{center}\large}
-    \postauthor{\end{center}}
-    \predate{\begin{center}\normalsize}
-    \postdate{\end{center}}
-
-subtitle: "Informe estadístic"
+    
+    \preauthor{
+      \begin{center}
+      \fontsize{14}{10}\bfseries}
+      \postauthor{\end{center}}
+    
+    \predate{  
+      \begin{center}
+      \fontsize{14}{10}\textbf}
+      \postdate{\end{center}}
+    
 website: "https://github.com/USR-DAPCAT/"
 params:
   mostra: yes
@@ -76,6 +83,9 @@ always_allow_html: yes
   <!--  Afegir a la part de header-includes: linea 20
         Si es vol afegir el logo o alguna informació la part superior de la pagina (\fancyhead[L] , [L] denota el costat) o la inferiro (\fancyfoot[L])
         
+    
+    #\fontsize{22}{25} 1r numero tamaño 2o interlineado
+
     \usepackage{array}
     \usepackage{multirow}
     \usepackage{wrapfig}
@@ -94,14 +104,14 @@ always_allow_html: yes
        
   -->
 
-```{r imatge loggo, echo=FALSE}
+```{r imatge loggo, echo=FALSE, include=FALSE}
 knitr::include_graphics("logos_css/CENTER LOGO.png")
 ```
 
 <div class="watermark">DRAFT</div>
 
-# Projecte CANFANGA. Estudi d'associació de la velocitat amb el tocino
-## Jordi Real
+<!-- # Projecte CANFANGA. Estudi d'associació de la velocitat amb el tocino -->
+<!-- ## Jordi Real -->
 
 
 
